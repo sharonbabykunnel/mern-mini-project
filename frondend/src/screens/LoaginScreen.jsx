@@ -1,16 +1,38 @@
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
+import { toast } from 'react-toastify';
+import { useLoginMutation } from '../utils/userApiSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { setCredentials } from '../utils/userSlice';
+import { useNavigate } from 'react-router-dom';
 
 const LoaginScreen = () => {
     const email = useRef();
     const password = useRef();
-    const handleSubmit = (e)=>{
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const [login,{isLoading}] = useLoginMutation();
+    const {userInfo} = useSelector((state)=>state.auth);
+    useEffect(()=>{
+      if(userInfo){
+        navigate('/')
+      }
+    },[navigate,userInfo]);
+    const handleSubmit = async (e)=>{
       e.preventDefault();
-      if(password)
+      try {
+        const res = await login({email,password}).unwrap();
+        dispatch(setCredentials({...res}));
+        navigate('/');
+      } catch (error) {
+        toast.error(err?.data?.message || err.error);
+      }
     }
   return (
     <div className='m-4 flex justify-center items-center h-96 '>
       <div className=' border border-slate-400 w-[50%]'>
-        <h1 className='text-2xl flex justify-center p-4'>Register</h1>
+        {isLoading }
+        <h1 className='text-2xl flex justify-center p-4'>Sign In</h1>
         <form onSubmit={handleSubmit} className='p-4 flex flex-col'>
             <div>
             <label className='p-4' >Email</label>
